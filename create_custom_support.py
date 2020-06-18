@@ -3,6 +3,7 @@ import sys, os, glob
 import numpy as np
 from stl import mesh
 import math
+from tqdm import tqdm
 
 
 def load_mesh(file):
@@ -25,29 +26,31 @@ def rotate_mesh(tile):
 
 
 def add_support(tile):
-    support = mesh.Mesh.from_file('support.stl')
+    # support = mesh.Mesh.from_file('support_1.0.stl')
+    # support.points[:,(0,3,6)] += -60.7
+    # support.points[:,(1,4,7)] += -37.6
+    # support.points[:,(2,5,8)] += -17.5
+    support = mesh.Mesh.from_file('support_1.0_noside.stl')
     support.points[:,(0,3,6)] += -60.7
-    support.points[:,(1,4,7)] += -36.6
-    support.points[:,(2,5,8)] += -18.5
+    support.points[:,(1,4,7)] += -36.7
+    support.points[:,(2,5,8)] += -17.5
     tile = mesh.Mesh(np.concatenate([tile.data,support.data]))
     return tile
 
 
 def write_output(tile, file):
-    tile.save(file.replace('.stl', '_supported.stl'))
-    print(file)
+    tile.save(file.replace('less.stl', 's.stl'))
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        files = glob.glob('../supportless/*supportless.stl')
+        print('''
+    Usage: python create_custom_support.py path/to/tiles/with_*_wildcard.stl''')
     else:
-        files = sys.argv[1:]
-
-    for file in files:
-        tile = load_mesh(file)
-        tile = realign_mesh(tile)
-        tile = rotate_mesh(tile)
-        tile = add_support(tile)
-        write_output(tile, file)
+        for file in tqdm([g for f in sys.argv[1:] for g in glob.glob(f)]):
+            tile = load_mesh(file)
+            tile = realign_mesh(tile)
+            tile = rotate_mesh(tile)
+            tile = add_support(tile)
+            write_output(tile, file)
 
